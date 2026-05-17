@@ -98,14 +98,25 @@ class IMDRFCategoryResult:
     clinical_evaluation_required: bool
     analytical_validation_required: bool
     clinical_validation_required: bool
+    # Heuristic confidence — always 1.0 when axes are supplied explicitly via categorize();
+    # set to < 1.0 by categorize_from_description() to flag keyword-derived results.
+    confidence: float = 1.0
+    verify_manually: bool = False
+    confidence_note: str = ""
 
     def __str__(self) -> str:
+        confidence_line = (
+            f"  ⚠ Manual verification recommended ({self.confidence_note})\n"
+            if self.verify_manually else ""
+        )
         return (
             f"IMDRF Category {self.category} ({self.risk_label})\n"
             f"  Healthcare State:    {self.healthcare_state.value}\n"
             f"  Output Significance: {self.significance.value}\n"
             f"  FDA Class Equiv.:    {self.fda_class_equivalent}\n"
             f"  Clinical Eval:       {'Required' if self.clinical_evaluation_required else 'May not be required'}\n"
+            f"  Confidence:          {self.confidence:.0%}\n"
+            + confidence_line
         )
 
 
@@ -201,9 +212,14 @@ class IMDRFCategorizer:
     ) -> IMDRFCategoryResult:
         """
         Helper to categorize from a textual intended use description.
-        Uses simple heuristics — for demonstration purposes.
+
+        Uses keyword heuristics — results include a ``confidence`` score (0–1) and a
+        ``verify_manually`` flag when confidence is below 0.80.  The returned
+        ``confidence_note`` explains the signal strength so reviewers know what to check.
+
+        For definitive classification, call ``categorize()`` directly with explicit axes
+        after consulting IMDRF N12 §6 criteria.
         """
-        # Map condition severity
         state_map = {
             "critical": HealthcareState.CRITICAL,
             "life-threatening": HealthcareState.CRITICAL,
@@ -212,18 +228,47 @@ class IMDRFCategorizer:
             "non-serious": HealthcareState.NON_SERIOUS,
             "wellness": HealthcareState.NON_SERIOUS,
         }
+        severity_matched = condition_severity.lower() in state_map
         state = state_map.get(condition_severity.lower(), HealthcareState.SERIOUS)
 
-        # Determine significance from keywords in intended use
         treat_keywords = ["treat", "deliver", "dose", "administer", "close-loop", "autonomous"]
         drive_keywords = ["diagnose", "detect", "identify", "alert", "recommend", "triage"]
 
         use_lower = intended_use.lower()
-        if is_autonomous or any(k in use_lower for k in treat_keywords):
+        matched_treat = [k for k in treat_keywords if k in use_lower]
+        matched_drive = [k for k in drive_keywords if k in use_lower]
+
+        # Significance determination + confidence scoring
+        if is_autonomous or matched_treat:
             sig = SignificanceOfOutput.TREAT_OR_DIAGNOSE
-        elif any(k in use_lower for k in drive_keywords):
+            if is_autonomous and matched_treat:
+                base_confidence = 0.90
+                note = f"is_autonomous=True + keyword(s): {matched_treat}"
+            elif is_autonomous:
+                base_confidence = 0.80
+                note = "is_autonomous=True; no treat keywords found — verify output drives treatment"
+            else:
+                base_confidence = 0.75 + min(len(matched_treat) * 0.05, 0.15)
+                note = f"treat keyword(s) matched: {matched_treat}"
+        elif matched_drive:
             sig = SignificanceOfOutput.DRIVE_MANAGEMENT
+            base_confidence = 0.70 + min(len(matched_drive) * 0.05, 0.15)
+            note = f"drive keyword(s) matched: {matched_drive}"
         else:
             sig = SignificanceOfOutput.INFORM_MANAGEMENT
+            base_confidence = 0.50
+            note = "no treatment/drive keywords found — defaulted to Inform Management"
 
-        return self.categorize(state, sig)
+        # Small bonus when severity label was an exact map hit
+        confidence = round(min(base_confidence + (0.05 if severity_matched else 0.0), 1.0), 2)
+        verify_manually = confidence < 0.80
+
+        result = self.categorize(state, sig)
+        result.confidence = confidence
+        result.verify_manually = verify_manually
+        result.confidence_note = (
+            f"{note}; severity={'matched' if severity_matched else 'defaulted to serious'}. "
+            f"Verify against IMDRF N12 §6 criteria before submission."
+            if verify_manually else note
+        )
+        return result

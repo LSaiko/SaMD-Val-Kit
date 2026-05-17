@@ -14,8 +14,13 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Optional, List, Dict
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
+
+
+def _utcnow() -> datetime:
+    """Return current UTC time. Centralised so all timestamps share the same tz-aware source."""
+    return datetime.now(timezone.utc)
 
 
 # ---------------------------------------------------------------------------
@@ -132,7 +137,7 @@ class SaMDDevice:
     interoperates_with_ehr: bool = False
 
     # --- Lifecycle ---
-    created_at: datetime = field(default_factory=datetime.now)
+    created_at: datetime = field(default_factory=_utcnow)
     uid: str = field(default_factory=lambda: str(uuid.uuid4()))
 
     def __post_init__(self):
@@ -209,17 +214,25 @@ class ValidationItem:
     deviation_note: str = ""
 
     def mark_passed(self, tester: str, result: str, evidence: str = "") -> None:
+        if not tester.strip():
+            raise ValueError("tester name is required for audit trail compliance")
+        if len(result.strip()) < 3:
+            raise ValueError("result description must be at least 3 characters")
         self.status = ValidationStatus.PASSED
         self.actual_result = result
         self.tester = tester
-        self.test_date = datetime.now()
+        self.test_date = _utcnow()
         self.evidence_ref = evidence
 
     def mark_failed(self, tester: str, result: str, deviation: str = "") -> None:
+        if not tester.strip():
+            raise ValueError("tester name is required for audit trail compliance")
+        if len(result.strip()) < 3:
+            raise ValueError("result description must be at least 3 characters")
         self.status = ValidationStatus.FAILED
         self.actual_result = result
         self.tester = tester
-        self.test_date = datetime.now()
+        self.test_date = _utcnow()
         self.deviation_note = deviation
 
     def to_dict(self) -> Dict:
@@ -252,7 +265,7 @@ class ValidationSession:
     prepared_by: str = ""
     approved_by: str = ""
     site: str = ""
-    created_at: datetime = field(default_factory=datetime.now)
+    created_at: datetime = field(default_factory=_utcnow)
     items: List[ValidationItem] = field(default_factory=list)
 
     def add_item(self, item: ValidationItem) -> None:

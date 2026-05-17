@@ -22,7 +22,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import List, Optional, Dict
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class Severity(Enum):
@@ -139,17 +139,21 @@ class RiskItem:
 
     @property
     def initial_acceptability(self) -> RiskAcceptability:
-        return RISK_MATRIX.get(
-            (self.probability_before, self.severity),
-            RiskAcceptability.UNACCEPTABLE
-        )
+        key = (self.probability_before, self.severity)
+        if key not in RISK_MATRIX:
+            raise ValueError(
+                f"Invalid risk matrix key {key}: probability and severity must each be 1–5"
+            )
+        return RISK_MATRIX[key]
 
     @property
     def residual_acceptability(self) -> RiskAcceptability:
-        return RISK_MATRIX.get(
-            (self.probability_after, self.severity),
-            RiskAcceptability.UNACCEPTABLE
-        )
+        key = (self.probability_after, self.severity)
+        if key not in RISK_MATRIX:
+            raise ValueError(
+                f"Invalid risk matrix key {key}: probability and severity must each be 1–5"
+            )
+        return RISK_MATRIX[key]
 
     @property
     def risk_reduction_achieved(self) -> bool:
@@ -193,7 +197,7 @@ class RiskManagementFile:
     def __init__(self, device):
         self.device = device
         self.risks: List[RiskItem] = []
-        self.created_at = datetime.now()
+        self.created_at = datetime.now(timezone.utc)
         self._prepopulate_typical_risks()
 
     def add_risk(self, risk: RiskItem) -> None:

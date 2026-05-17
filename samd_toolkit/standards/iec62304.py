@@ -218,20 +218,51 @@ class IEC62304LifecycleValidator:
         return [a for a in self.LIFECYCLE_ACTIVITIES
                 if a.is_required_for(self.safety_class)]
 
-    def gap_analysis(self, completed_sections: List[str] = None) -> Dict:
+    def list_activity_ids(self) -> List[str]:
+        """
+        Return all activity IDs required for this device's safety class.
+
+        Each ID is the canonical "{section}: {activity}" string — use these with
+        ``gap_analysis(completed_activity_ids=[...])`` for activity-level tracking.
+        """
+        return [f"{a.section}: {a.activity}" for a in self.required_activities()]
+
+    def gap_analysis(
+        self,
+        completed_sections: List[str] = None,
+        completed_activity_ids: List[str] = None,
+    ) -> Dict:
         """
         Generate a gap analysis against IEC 62304 requirements.
 
+        Supports two granularities — pick one per call:
+
+        - **Activity-level** (recommended): pass ``completed_activity_ids`` as a list of
+          ``"{section}: {activity}"`` strings (use ``list_activity_ids()`` to enumerate them).
+          A section is only considered complete when *all* of its required activities are done.
+          This prevents a partially-completed section from appearing fully compliant.
+
+        - **Section-level** (legacy): pass ``completed_sections`` as a list of section
+          numbers (e.g. ``["5.1", "5.2"]``). All activities within a listed section are
+          treated as complete — use only when section-granularity is sufficient.
+
         Args:
-            completed_sections: List of section numbers completed (e.g., ["5.1", "5.2"])
+            completed_sections:    Section numbers fully done (e.g. ``["5.1", "5.2"]``).
+            completed_activity_ids: Fine-grained activity IDs (e.g. ``["5.1: Software Development Plan"]``).
 
         Returns:
-            Dict with required, completed, and gaps
+            Dict with required count, completed count, gap count, compliance %, and gap list.
         """
-        completed = set(completed_sections or [])
         required = self.required_activities()
-        gaps = [a for a in required if a.section not in completed]
-        done = [a for a in required if a.section in completed]
+
+        if completed_activity_ids is not None:
+            done_ids = set(completed_activity_ids)
+            done = [a for a in required if f"{a.section}: {a.activity}" in done_ids]
+            gaps = [a for a in required if f"{a.section}: {a.activity}" not in done_ids]
+        else:
+            completed = set(completed_sections or [])
+            done = [a for a in required if a.section in completed]
+            gaps = [a for a in required if a.section not in completed]
 
         return {
             "Device": self.device.name,
@@ -242,6 +273,30 @@ class IEC62304LifecycleValidator:
             "Compliance": f"{(len(done)/len(required)*100):.0f}%" if required else "100%",
             "Gap List": [f"{a.section}: {a.activity}" for a in gaps],
         }
+
+    def describe_item_selection(self) -> List[Dict]:
+        """
+        Explain which activities are required for this device's safety class and why.
+
+        Useful for orientation — shows every activity in the standard alongside whether
+        it applies to this device and which classes it applies to.
+        """
+        result = []
+        for a in self.LIFECYCLE_ACTIVITIES:
+            required = a.is_required_for(self.safety_class)
+            result.append({
+                "Section": a.section,
+                "Activity": a.activity,
+                "Required Classes": ", ".join(a.required_for_class),
+                "Required for This Device": "Yes" if required else "No",
+                "Reason": (
+                    f"Mandatory for Class {self.safety_class.value}"
+                    if required
+                    else f"Not required for Class {self.safety_class.value} "
+                         f"(applies to: {', '.join(a.required_for_class)})"
+                ),
+            })
+        return result
 
     def print_checklist(self):
         """Print a formatted IEC 62304 compliance checklist."""

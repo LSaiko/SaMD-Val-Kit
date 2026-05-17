@@ -18,7 +18,7 @@ AND has characteristics vulnerable to cybersecurity threats.
 from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import List, Optional, Dict
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 import hashlib
 
@@ -36,7 +36,7 @@ class SBOMComponent:
     unique_id: str = ""                  # e.g., CPE, PURL, or internal ID
     dependency_relationship: str = ""    # e.g., "Direct" | "Transitive"
     author: str = ""                     # Person/tool generating SBOM entry
-    timestamp: str = field(default_factory=lambda: datetime.now().isoformat())
+    timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
     # Extended fields (recommended)
     license_id: str = ""                 # SPDX license ID, e.g., "MIT", "Apache-2.0"
@@ -82,7 +82,7 @@ class SBOMGenerator:
     def __init__(self, device):
         self.device = device
         self.components: List[SBOMComponent] = []
-        self.generated_at = datetime.now()
+        self.generated_at = datetime.now(timezone.utc)
 
     def add_component(self, component: SBOMComponent) -> None:
         self.components.append(component)

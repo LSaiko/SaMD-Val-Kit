@@ -4,7 +4,7 @@ setup(
     name="samd-validation-toolkit",
     version="0.1.0",
     description="SaMD Validation Checklist & IQ/OQ/PQ Template Generator",
-    long_description=open("README.md").read(),
+    long_description=open("README.md", encoding="utf-8").read(),
     long_description_content_type="text/markdown",
     author="SaMD Toolkit Contributors",
     python_requires=">=3.9",

@@ -280,7 +280,22 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). We welcome:
 
 ## ⚠️ Disclaimer
 
-This toolkit is an **engineering and documentation aid**. It does **not** constitute regulatory advice. Always consult a qualified Regulatory Affairs professional for FDA submissions, CE marking, or other regulatory approvals. The authors assume no liability for regulatory decisions made using this software.
+**This toolkit generates templates — it is not a validated Quality Management System (QMS).**
+
+| What this toolkit does | What this toolkit does NOT do |
+|---|---|
+| Generates IQ/OQ/PQ protocol templates | Execute or sign off a regulated validation |
+| Pre-populates risk items per ISO 14971 | Replace a Risk Management File approved by a QE |
+| Produces SBOM drafts in SPDX 2.3 format | Submit a §524B-compliant SBOM to the FDA |
+| Outputs HTML audit-trail reports | Store records in a 21 CFR Part 11-compliant system |
+
+**Before using any output for a regulatory submission**, all generated documents must be:
+
+1. Reviewed and approved by a qualified Regulatory Affairs professional
+2. Executed and stored within a **21 CFR Part 11-compliant QMS** (e.g., Veeva Vault, MasterControl, Greenlight Guru, or equivalent)
+3. Subject to your organisation's change control, CAPA, and document control procedures
+
+This toolkit does **not** constitute regulatory advice. The authors assume no liability for regulatory decisions made using this software. Always consult a qualified RA professional for FDA submissions, CE marking, or other regulatory approvals.
 
 ---
 
