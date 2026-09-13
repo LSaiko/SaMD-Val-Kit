@@ -10,71 +10,97 @@ import pytest
 import sys
 import os
 from datetime import timezone
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from samd_toolkit.core import (
-    SaMDDevice, DeviceClass, SoftwareSafetyClass, ValidationSession,
-    ValidationItem, ValidationStatus, RegulatoryPathway
+    SaMDDevice,
+    DeviceClass,
+    SoftwareSafetyClass,
+    ValidationSession,
+    ValidationItem,
+    ValidationStatus,
+    RegulatoryPathway,
 )
 from samd_toolkit.validators.iq_oq_pq import (
-    IQOQPQGenerator, InstallationQualification,
-    OperationalQualification, PerformanceQualification
+    IQOQPQGenerator,
+    InstallationQualification,
+    OperationalQualification,
+    PerformanceQualification,
 )
 from samd_toolkit.standards.iso14971 import (
-    RiskManagementFile, RiskItem, RiskAcceptability, RISK_MATRIX
+    RiskManagementFile,
+    RiskItem,
+    RiskAcceptability,
+    RISK_MATRIX,
 )
 from samd_toolkit.standards.imdrf import (
-    IMDRFCategorizer, HealthcareState, SignificanceOfOutput
+    IMDRFCategorizer,
+    HealthcareState,
+    SignificanceOfOutput,
 )
 from samd_toolkit.standards.iec62304 import IEC62304LifecycleValidator
 from samd_toolkit.cybersecurity.fda_cyber import FDACybersecurityChecker
 from samd_toolkit.cybersecurity.sbom import SBOMGenerator
 
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture
 def class_i_device():
     return SaMDDevice(
-        name="WellTrack", version="1.0", manufacturer="HealthSoft",
+        name="WellTrack",
+        version="1.0",
+        manufacturer="HealthSoft",
         device_class=DeviceClass.CLASS_I,
         software_safety_class=SoftwareSafetyClass.CLASS_A,
         intended_use="General wellness activity tracking",
-        network_connected=True, contains_ai_ml=False, processes_phi=False,
+        network_connected=True,
+        contains_ai_ml=False,
+        processes_phi=False,
     )
 
 
 @pytest.fixture
 def class_ii_device():
     return SaMDDevice(
-        name="CardioWatch AI", version="2.1.0", manufacturer="MedTech Corp",
+        name="CardioWatch AI",
+        version="2.1.0",
+        manufacturer="MedTech Corp",
         device_class=DeviceClass.CLASS_II,
         software_safety_class=SoftwareSafetyClass.CLASS_B,
         intended_use="AI-driven ECG arrhythmia detection",
         predicate_device="iRhythm Zio AT (K192613)",
-        network_connected=True, contains_ai_ml=True,
-        processes_phi=True, interoperates_with_ehr=True,
+        network_connected=True,
+        contains_ai_ml=True,
+        processes_phi=True,
+        interoperates_with_ehr=True,
     )
 
 
 @pytest.fixture
 def class_iii_device():
     return SaMDDevice(
-        name="InsulinAI", version="1.0.0", manufacturer="DiabetesTech",
+        name="InsulinAI",
+        version="1.0.0",
+        manufacturer="DiabetesTech",
         device_class=DeviceClass.CLASS_III,
         software_safety_class=SoftwareSafetyClass.CLASS_C,
         intended_use="Closed-loop automated insulin delivery",
         regulatory_pathway=RegulatoryPathway.PMA,
-        network_connected=True, contains_ai_ml=True,
-        processes_phi=True, interoperates_with_ehr=True,
+        network_connected=True,
+        contains_ai_ml=True,
+        processes_phi=True,
+        interoperates_with_ehr=True,
     )
 
 
 # ---------------------------------------------------------------------------
 # Core Model Tests
 # ---------------------------------------------------------------------------
+
 
 class TestSaMDDevice:
 
@@ -89,8 +115,13 @@ class TestSaMDDevice:
 
     def test_device_summary_contains_required_fields(self, class_ii_device):
         summary = class_ii_device.summary()
-        required_keys = ["Device Name", "FDA Class", "Risk Level",
-                         "IEC 62304 Safety Class", "Regulatory Pathway"]
+        required_keys = [
+            "Device Name",
+            "FDA Class",
+            "Risk Level",
+            "IEC 62304 Safety Class",
+            "Regulatory Pathway",
+        ]
         for key in required_keys:
             assert key in summary
 
@@ -103,12 +134,18 @@ class TestSaMDDevice:
 # IQ/OQ/PQ Generator Tests
 # ---------------------------------------------------------------------------
 
+
 class TestIQOQPQGenerator:
 
-    def test_class_iii_has_more_items_than_class_i(self, class_i_device, class_iii_device):
+    def test_class_iii_has_more_items_than_class_i(
+        self, class_i_device, class_iii_device
+    ):
         gen_i = IQOQPQGenerator(class_i_device)
         gen_iii = IQOQPQGenerator(class_iii_device)
-        assert gen_iii.item_count_by_protocol()["Total"] > gen_i.item_count_by_protocol()["Total"]
+        assert (
+            gen_iii.item_count_by_protocol()["Total"]
+            > gen_i.item_count_by_protocol()["Total"]
+        )
 
     def test_ai_ml_device_has_ai_specific_items(self, class_ii_device):
         gen = IQOQPQGenerator(class_ii_device)
@@ -123,10 +160,13 @@ class TestIQOQPQGenerator:
 
     def test_non_network_device_no_network_iq_item(self):
         device = SaMDDevice(
-            name="OfflineApp", version="1.0", manufacturer="Corp",
+            name="OfflineApp",
+            version="1.0",
+            manufacturer="Corp",
             device_class=DeviceClass.CLASS_I,
             software_safety_class=SoftwareSafetyClass.CLASS_A,
-            intended_use="Offline wellness", network_connected=False,
+            intended_use="Offline wellness",
+            network_connected=False,
         )
         iq = InstallationQualification(device)
         network_items = [i for i in iq.items if i.section == "Network"]
@@ -153,6 +193,7 @@ class TestIQOQPQGenerator:
 # ISO 14971 Risk Management Tests
 # ---------------------------------------------------------------------------
 
+
 class TestRiskManagement:
 
     def test_risk_matrix_covers_all_combinations(self):
@@ -172,14 +213,15 @@ class TestRiskManagement:
         rmf = RiskManagementFile(class_ii_device)
         assert len(rmf.risks) > 0
 
-    def test_class_iii_has_more_risks_than_class_i(self, class_i_device, class_iii_device):
+    def test_class_iii_has_more_risks_than_class_i(
+        self, class_i_device, class_iii_device
+    ):
         rmf_i = RiskManagementFile(class_i_device)
         rmf_iii = RiskManagementFile(class_iii_device)
         assert len(rmf_iii.risks) > len(rmf_i.risks)
 
     def test_risk_item_score_calculation(self):
-        risk = RiskItem(probability_before=3, severity=4,
-                        probability_after=1)
+        risk = RiskItem(probability_before=3, severity=4, probability_after=1)
         assert risk.initial_risk_score == 12
         assert risk.residual_risk_score == 4
 
@@ -197,6 +239,7 @@ class TestRiskManagement:
 # ---------------------------------------------------------------------------
 # IMDRF Categorization Tests
 # ---------------------------------------------------------------------------
+
 
 class TestIMDRFCategorizer:
 
@@ -233,9 +276,12 @@ class TestIMDRFCategorizer:
 # IEC 62304 Tests
 # ---------------------------------------------------------------------------
 
+
 class TestIEC62304:
 
-    def test_class_c_has_more_requirements_than_class_a(self, class_i_device, class_iii_device):
+    def test_class_c_has_more_requirements_than_class_a(
+        self, class_i_device, class_iii_device
+    ):
         val_a = IEC62304LifecycleValidator(class_i_device)
         val_c = IEC62304LifecycleValidator(class_iii_device)
         assert len(val_c.required_activities()) > len(val_a.required_activities())
@@ -264,6 +310,7 @@ class TestIEC62304:
 # SBOM Tests
 # ---------------------------------------------------------------------------
 
+
 class TestSBOM:
 
     def test_sbom_generates_components(self, class_ii_device):
@@ -287,6 +334,7 @@ class TestSBOM:
 # Cybersecurity Tests
 # ---------------------------------------------------------------------------
 
+
 class TestCybersecurity:
 
     def test_cybersecurity_has_524b_controls(self, class_ii_device):
@@ -304,8 +352,13 @@ class TestCybersecurity:
         checker = FDACybersecurityChecker(class_iii_device)
         # Should have controls across all 5 domains
         domains = set(c.domain for c in checker.controls)
-        expected = {"Security Risk Management", "Security Architecture",
-                    "Cybersecurity Testing", "Transparency", "Post-Market"}
+        expected = {
+            "Security Risk Management",
+            "Security Architecture",
+            "Cybersecurity Testing",
+            "Transparency",
+            "Post-Market",
+        }
         assert expected == domains
 
 
@@ -313,11 +366,13 @@ class TestCybersecurity:
 # Input Validation Tests (negative)
 # ---------------------------------------------------------------------------
 
+
 class TestValidationItemInputValidation:
 
     def _make_item(self):
         return ValidationItem(
-            item_id="IQ-001", section="Environment",
+            item_id="IQ-001",
+            section="Environment",
             requirement="OS version verified",
             acceptance_criteria="Ubuntu 22.04 LTS",
             test_method="System inspection",
@@ -351,14 +406,18 @@ class TestValidationItemInputValidation:
 
     def test_mark_passed_records_utc_timestamp(self):
         item = self._make_item()
-        item.mark_passed("J. Smith", "Meets acceptance criteria — Ubuntu 22.04 confirmed")
+        item.mark_passed(
+            "J. Smith", "Meets acceptance criteria — Ubuntu 22.04 confirmed"
+        )
         assert item.test_date is not None
         assert item.test_date.tzinfo is not None
         assert item.test_date.tzinfo == timezone.utc
 
     def test_mark_failed_records_utc_timestamp(self):
         item = self._make_item()
-        item.mark_failed("J. Smith", "OS version mismatch — found 20.04", "Deviation DR-001")
+        item.mark_failed(
+            "J. Smith", "OS version mismatch — found 20.04", "Deviation DR-001"
+        )
         assert item.test_date is not None
         assert item.test_date.tzinfo == timezone.utc
 
@@ -366,6 +425,7 @@ class TestValidationItemInputValidation:
 # ---------------------------------------------------------------------------
 # Risk Matrix Boundary Tests (negative)
 # ---------------------------------------------------------------------------
+
 
 class TestRiskMatrixBoundaries:
 
@@ -394,6 +454,7 @@ class TestRiskMatrixBoundaries:
 # UTC Timestamp Tests
 # ---------------------------------------------------------------------------
 
+
 class TestUTCTimestamps:
 
     def test_device_created_at_is_utc(self, class_ii_device):
@@ -406,6 +467,7 @@ class TestUTCTimestamps:
 
     def test_rmf_created_at_is_utc(self, class_ii_device):
         from samd_toolkit.standards.iso14971 import RiskManagementFile
+
         rmf = RiskManagementFile(class_ii_device)
         assert rmf.created_at.tzinfo == timezone.utc
 
@@ -417,6 +479,7 @@ class TestUTCTimestamps:
 # ---------------------------------------------------------------------------
 # Integration Test — Full Pipeline
 # ---------------------------------------------------------------------------
+
 
 class TestFullPipeline:
 
@@ -434,7 +497,9 @@ class TestFullPipeline:
 
         # Mark a few items to exercise pass/fail paths
         session.items[0].mark_passed("J. Smith", "Environment verified as expected")
-        session.items[1].mark_failed("J. Smith", "Unexpected service found running", "DR-001: remediated")
+        session.items[1].mark_failed(
+            "J. Smith", "Unexpected service found running", "DR-001: remediated"
+        )
         assert session.passed == 1
         assert session.failed == 1
 
@@ -477,11 +542,13 @@ class TestFullPipeline:
 # Serialisation Round-Trip Tests
 # ---------------------------------------------------------------------------
 
+
 class TestSerialisation:
 
     def test_validation_item_to_dict_round_trip(self):
         item = ValidationItem(
-            item_id="IQ-099", section="Environment",
+            item_id="IQ-099",
+            section="Environment",
             requirement="OS version verified",
             acceptance_criteria="Ubuntu 22.04 LTS",
             test_method="System inspection",
@@ -496,6 +563,7 @@ class TestSerialisation:
 
     def test_device_summary_all_fields_serialisable(self, class_iii_device):
         import json
+
         summary = class_iii_device.summary()
         # All values must be JSON-serialisable (str/bool/int/float)
         json_str = json.dumps(summary)
@@ -503,10 +571,12 @@ class TestSerialisation:
 
     def test_risk_item_to_dict_round_trip(self):
         import json
+
         risk = RiskItem(
             risk_id="RISK-TEST",
             hazard="Test hazard",
-            probability_before=2, severity=3,
+            probability_before=2,
+            severity=3,
             probability_after=1,
         )
         d = risk.to_dict()
@@ -517,6 +587,7 @@ class TestSerialisation:
 
     def test_spdx_export_is_json_serialisable(self, class_ii_device):
         import json
+
         sbom = SBOMGenerator(class_ii_device).generate()
         spdx = sbom.export_spdx_json()
         json_str = json.dumps(spdx)
@@ -526,6 +597,7 @@ class TestSerialisation:
 # ---------------------------------------------------------------------------
 # IEC 62304 — Activity-Level Gap Analysis
 # ---------------------------------------------------------------------------
+
 
 class TestIEC62304ActivityLevel:
 
@@ -556,11 +628,14 @@ class TestIEC62304ActivityLevel:
         all_ids = val.list_activity_ids()
         # Find two activities from the same section
         from collections import defaultdict
+
         by_section = defaultdict(list)
         for aid in all_ids:
             section = aid.split(": ")[0]
             by_section[section].append(aid)
-        multi_act_sections = {s: acts for s, acts in by_section.items() if len(acts) > 1}
+        multi_act_sections = {
+            s: acts for s, acts in by_section.items() if len(acts) > 1
+        }
         assert multi_act_sections, "No multi-activity section found to test with"
 
         section, acts = next(iter(multi_act_sections.items()))
@@ -591,10 +666,16 @@ class TestIEC62304ActivityLevel:
 # IMDRF — Confidence Score & Manual Verification Flag
 # ---------------------------------------------------------------------------
 
+
 class TestIMDRFConfidence:
 
     def test_explicit_categorize_has_full_confidence(self):
-        from samd_toolkit.standards.imdrf import IMDRFCategorizer, HealthcareState, SignificanceOfOutput
+        from samd_toolkit.standards.imdrf import (
+            IMDRFCategorizer,
+            HealthcareState,
+            SignificanceOfOutput,
+        )
+
         cat = IMDRFCategorizer().categorize(
             HealthcareState.CRITICAL, SignificanceOfOutput.TREAT_OR_DIAGNOSE
         )
@@ -603,6 +684,7 @@ class TestIMDRFConfidence:
 
     def test_heuristic_no_keywords_low_confidence(self):
         from samd_toolkit.standards.imdrf import IMDRFCategorizer
+
         cat = IMDRFCategorizer().categorize_from_description(
             intended_use="Helps users track their general health",
             condition_severity="non-serious",
@@ -613,6 +695,7 @@ class TestIMDRFConfidence:
 
     def test_heuristic_strong_treat_keywords_higher_confidence(self):
         from samd_toolkit.standards.imdrf import IMDRFCategorizer
+
         cat = IMDRFCategorizer().categorize_from_description(
             intended_use="Autonomous closed-loop insulin delivery — treats and administers dose",
             is_autonomous=True,
@@ -623,6 +706,7 @@ class TestIMDRFConfidence:
 
     def test_heuristic_drive_keywords_medium_confidence(self):
         from samd_toolkit.standards.imdrf import IMDRFCategorizer
+
         cat = IMDRFCategorizer().categorize_from_description(
             intended_use="Detects and alerts clinicians to arrhythmia events",
             condition_severity="serious",
@@ -632,6 +716,7 @@ class TestIMDRFConfidence:
 
     def test_heuristic_confidence_note_populated(self):
         from samd_toolkit.standards.imdrf import IMDRFCategorizer
+
         cat = IMDRFCategorizer().categorize_from_description(
             intended_use="recommends treatment plan",
             condition_severity="critical",
@@ -639,7 +724,12 @@ class TestIMDRFConfidence:
         assert len(cat.confidence_note) > 0
 
     def test_str_output_includes_confidence(self):
-        from samd_toolkit.standards.imdrf import IMDRFCategorizer, HealthcareState, SignificanceOfOutput
+        from samd_toolkit.standards.imdrf import (
+            IMDRFCategorizer,
+            HealthcareState,
+            SignificanceOfOutput,
+        )
+
         cat = IMDRFCategorizer().categorize(
             HealthcareState.SERIOUS, SignificanceOfOutput.DRIVE_MANAGEMENT
         )

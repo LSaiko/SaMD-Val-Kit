@@ -12,14 +12,13 @@ from __future__ import annotations
 from datetime import datetime
 from ..core import ValidationSession, ValidationStatus
 
-
 STATUS_COLORS = {
-    ValidationStatus.PASSED:      ("#d4edda", "#155724"),
-    ValidationStatus.FAILED:      ("#f8d7da", "#721c24"),
+    ValidationStatus.PASSED: ("#d4edda", "#155724"),
+    ValidationStatus.FAILED: ("#f8d7da", "#721c24"),
     ValidationStatus.IN_PROGRESS: ("#fff3cd", "#856404"),
     ValidationStatus.NOT_STARTED: ("#f8f9fa", "#495057"),
-    ValidationStatus.WAIVED:      ("#d1ecf1", "#0c5460"),
-    ValidationStatus.N_A:         ("#e2e3e5", "#383d41"),
+    ValidationStatus.WAIVED: ("#d1ecf1", "#0c5460"),
+    ValidationStatus.N_A: ("#e2e3e5", "#383d41"),
 }
 
 
@@ -33,7 +32,6 @@ class HTMLReporter:
     def generate(self) -> str:
         s = self.session
         d = s.device
-        summary = s.summary()
 
         # Build item rows
         rows = ""
@@ -55,7 +53,11 @@ class HTMLReporter:
 
         # Summary cards
         pass_rate = s.pass_rate
-        pass_color = "#28a745" if pass_rate >= 95 else "#ffc107" if pass_rate >= 80 else "#dc3545"
+        pass_color = (
+            "#28a745"
+            if pass_rate >= 95
+            else "#ffc107" if pass_rate >= 80 else "#dc3545"
+        )
 
         html = f"""<!DOCTYPE html>
 <html lang="en">

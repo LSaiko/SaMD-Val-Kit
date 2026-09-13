@@ -33,7 +33,6 @@ IMDRF Two-Axis Risk Framework:
 from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional
 
 
 class HealthcareState(Enum):
@@ -41,9 +40,10 @@ class HealthcareState(Enum):
     IMDRF N12: State of healthcare situation/condition.
     Reflects the urgency/severity of the patient's medical context.
     """
-    CRITICAL    = "critical"    # Life-threatening / irreversible
-    SERIOUS     = "serious"     # Long-term harm, hospitalization likely
-    NON_SERIOUS = "non_serious" # Temporary, no lasting harm expected
+
+    CRITICAL = "critical"  # Life-threatening / irreversible
+    SERIOUS = "serious"  # Long-term harm, hospitalization likely
+    NON_SERIOUS = "non_serious"  # Temporary, no lasting harm expected
 
 
 class SignificanceOfOutput(Enum):
@@ -51,21 +51,26 @@ class SignificanceOfOutput(Enum):
     IMDRF N12: Significance of SaMD information/output to healthcare decision.
     Reflects how directly the SaMD output drives clinical action.
     """
-    TREAT_OR_DIAGNOSE = "treat_or_diagnose"  # Output IS the treatment/diagnosis decision
-    DRIVE_MANAGEMENT  = "drive_management"   # Output determines next clinical step
-    INFORM_MANAGEMENT = "inform_management"  # Output informs; clinician decides independently
+
+    TREAT_OR_DIAGNOSE = (
+        "treat_or_diagnose"  # Output IS the treatment/diagnosis decision
+    )
+    DRIVE_MANAGEMENT = "drive_management"  # Output determines next clinical step
+    INFORM_MANAGEMENT = (
+        "inform_management"  # Output informs; clinician decides independently
+    )
 
 
 # IMDRF Category Matrix (N12 Table 1)
 _IMDRF_MATRIX = {
-    (HealthcareState.CRITICAL,    SignificanceOfOutput.TREAT_OR_DIAGNOSE): 4,
-    (HealthcareState.CRITICAL,    SignificanceOfOutput.DRIVE_MANAGEMENT):  3,
-    (HealthcareState.CRITICAL,    SignificanceOfOutput.INFORM_MANAGEMENT): 2,
-    (HealthcareState.SERIOUS,     SignificanceOfOutput.TREAT_OR_DIAGNOSE): 3,
-    (HealthcareState.SERIOUS,     SignificanceOfOutput.DRIVE_MANAGEMENT):  2,
-    (HealthcareState.SERIOUS,     SignificanceOfOutput.INFORM_MANAGEMENT): 2,
+    (HealthcareState.CRITICAL, SignificanceOfOutput.TREAT_OR_DIAGNOSE): 4,
+    (HealthcareState.CRITICAL, SignificanceOfOutput.DRIVE_MANAGEMENT): 3,
+    (HealthcareState.CRITICAL, SignificanceOfOutput.INFORM_MANAGEMENT): 2,
+    (HealthcareState.SERIOUS, SignificanceOfOutput.TREAT_OR_DIAGNOSE): 3,
+    (HealthcareState.SERIOUS, SignificanceOfOutput.DRIVE_MANAGEMENT): 2,
+    (HealthcareState.SERIOUS, SignificanceOfOutput.INFORM_MANAGEMENT): 2,
     (HealthcareState.NON_SERIOUS, SignificanceOfOutput.TREAT_OR_DIAGNOSE): 2,
-    (HealthcareState.NON_SERIOUS, SignificanceOfOutput.DRIVE_MANAGEMENT):  1,
+    (HealthcareState.NON_SERIOUS, SignificanceOfOutput.DRIVE_MANAGEMENT): 1,
     (HealthcareState.NON_SERIOUS, SignificanceOfOutput.INFORM_MANAGEMENT): 1,
 }
 
@@ -89,6 +94,7 @@ _RISK_LABELS = {
 @dataclass
 class IMDRFCategoryResult:
     """Result of IMDRF risk categorization."""
+
     category: int
     healthcare_state: HealthcareState
     significance: SignificanceOfOutput
@@ -107,7 +113,8 @@ class IMDRFCategoryResult:
     def __str__(self) -> str:
         confidence_line = (
             f"  ⚠ Manual verification recommended ({self.confidence_note})\n"
-            if self.verify_manually else ""
+            if self.verify_manually
+            else ""
         )
         return (
             f"IMDRF Category {self.category} ({self.risk_label})\n"
@@ -115,8 +122,7 @@ class IMDRFCategoryResult:
             f"  Output Significance: {self.significance.value}\n"
             f"  FDA Class Equiv.:    {self.fda_class_equivalent}\n"
             f"  Clinical Eval:       {'Required' if self.clinical_evaluation_required else 'May not be required'}\n"
-            f"  Confidence:          {self.confidence:.0%}\n"
-            + confidence_line
+            f"  Confidence:          {self.confidence:.0%}\n" + confidence_line
         )
 
 
@@ -176,12 +182,14 @@ class IMDRFCategorizer:
             clinical_validation_required=category >= 3,
         )
 
-    def _describe(self, cat: int, state: HealthcareState, sig: SignificanceOfOutput) -> str:
+    def _describe(
+        self, cat: int, state: HealthcareState, sig: SignificanceOfOutput
+    ) -> str:
         descriptions = {
             1: (
-                f"Category I: Low risk SaMD. Output informs or drives management of "
-                f"non-serious conditions. Analytical validation required. "
-                f"Clinical evaluation may be achieved through analytical validation alone."
+                "Category I: Low risk SaMD. Output informs or drives management of "
+                "non-serious conditions. Analytical validation required. "
+                "Clinical evaluation may be achieved through analytical validation alone."
             ),
             2: (
                 f"Category II: Moderate risk SaMD. Multiple pathways: "
@@ -190,16 +198,16 @@ class IMDRFCategorizer:
                 f"Equivalent to FDA Class I/II — 510(k) may be required."
             ),
             3: (
-                f"Category III: Moderate-high risk SaMD. SaMD drives clinical management "
-                f"of serious/critical conditions, OR treats/diagnoses serious conditions. "
-                f"Full clinical validation required. FDA Class II/III pathway. "
-                f"Clinical studies demonstrating safety and effectiveness expected."
+                "Category III: Moderate-high risk SaMD. SaMD drives clinical management "
+                "of serious/critical conditions, OR treats/diagnoses serious conditions. "
+                "Full clinical validation required. FDA Class II/III pathway. "
+                "Clinical studies demonstrating safety and effectiveness expected."
             ),
             4: (
-                f"Category IV: High risk SaMD. SaMD treats or diagnoses life-threatening "
-                f"or critical conditions. Comprehensive clinical validation required. "
-                f"Equivalent to FDA Class III — PMA typically required. "
-                f"Highest level of evidence expected (RCT preferred)."
+                "Category IV: High risk SaMD. SaMD treats or diagnoses life-threatening "
+                "or critical conditions. Comprehensive clinical validation required. "
+                "Equivalent to FDA Class III — PMA typically required. "
+                "Highest level of evidence expected (RCT preferred)."
             ),
         }
         return descriptions[cat]
@@ -231,8 +239,22 @@ class IMDRFCategorizer:
         severity_matched = condition_severity.lower() in state_map
         state = state_map.get(condition_severity.lower(), HealthcareState.SERIOUS)
 
-        treat_keywords = ["treat", "deliver", "dose", "administer", "close-loop", "autonomous"]
-        drive_keywords = ["diagnose", "detect", "identify", "alert", "recommend", "triage"]
+        treat_keywords = [
+            "treat",
+            "deliver",
+            "dose",
+            "administer",
+            "close-loop",
+            "autonomous",
+        ]
+        drive_keywords = [
+            "diagnose",
+            "detect",
+            "identify",
+            "alert",
+            "recommend",
+            "triage",
+        ]
 
         use_lower = intended_use.lower()
         matched_treat = [k for k in treat_keywords if k in use_lower]
@@ -260,7 +282,9 @@ class IMDRFCategorizer:
             note = "no treatment/drive keywords found — defaulted to Inform Management"
 
         # Small bonus when severity label was an exact map hit
-        confidence = round(min(base_confidence + (0.05 if severity_matched else 0.0), 1.0), 2)
+        confidence = round(
+            min(base_confidence + (0.05 if severity_matched else 0.0), 1.0), 2
+        )
         verify_manually = confidence < 0.80
 
         result = self.categorize(state, sig)
@@ -269,6 +293,7 @@ class IMDRFCategorizer:
         result.confidence_note = (
             f"{note}; severity={'matched' if severity_matched else 'defaulted to serious'}. "
             f"Verify against IMDRF N12 §6 criteria before submission."
-            if verify_manually else note
+            if verify_manually
+            else note
         )
         return result

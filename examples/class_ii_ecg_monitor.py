@@ -16,23 +16,36 @@ IMDRF: Category III (drive management / serious condition)
 
 import sys
 import os
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from samd_toolkit.core import SaMDDevice, DeviceClass, SoftwareSafetyClass, RegulatoryPathway
+from samd_toolkit.core import (
+    SaMDDevice,
+    DeviceClass,
+    SoftwareSafetyClass,
+    RegulatoryPathway,
+)
 from samd_toolkit.validators.iq_oq_pq import IQOQPQGenerator
 from samd_toolkit.standards.iso14971 import RiskManagementFile
-from samd_toolkit.standards.iec62304 import IEC62304LifecycleValidator, SoftwareSafetyClass as IECSafetyClass
-from samd_toolkit.standards.imdrf import IMDRFCategorizer, HealthcareState, SignificanceOfOutput
+from samd_toolkit.standards.iec62304 import (
+    IEC62304LifecycleValidator,
+    SoftwareSafetyClass as IECSafetyClass,
+)
+from samd_toolkit.standards.imdrf import (
+    IMDRFCategorizer,
+    HealthcareState,
+    SignificanceOfOutput,
+)
 from samd_toolkit.cybersecurity.fda_cyber import FDACybersecurityChecker
 from samd_toolkit.cybersecurity.sbom import SBOMGenerator
 
 
 def run_class_ii_example():
-    print("\n" + "█"*70)
+    print("\n" + "█" * 70)
     print("  CLASS II SaMD VALIDATION EXAMPLE")
     print("  AI-Driven ECG Arrhythmia Detection (CardioWatch AI)")
     print("  Regulatory Pathway: 510(k) | IEC 62304 Class B | IMDRF Category III")
-    print("█"*70)
+    print("█" * 70)
 
     device = SaMDDevice(
         name="CardioWatch AI",
@@ -92,7 +105,9 @@ def run_class_ii_example():
     print("\n[4] IQ/OQ/PQ PROTOCOL SUMMARY")
     print("-" * 50)
     gen = IQOQPQGenerator(device)
-    session = gen.generate_full_package(prepared_by="Alice Chen, RA", site="MedTech Corp. — San Jose, CA")
+    session = gen.generate_full_package(
+        prepared_by="Alice Chen, RA", site="MedTech Corp. — San Jose, CA"
+    )
     counts = gen.item_count_by_protocol()
     for k, v in counts.items():
         print(f"    {k}: {v} items")
@@ -117,29 +132,29 @@ def run_class_ii_example():
     print("\n[7] 510(k) SUBMISSION PACKAGE CHECKLIST")
     print("-" * 50)
     k510_sections = [
-        ("Cover Sheet (FDA Form 3514)",              "21 CFR 807.87(a)"),
-        ("Table of Contents",                        "21 CFR 807.87"),
-        ("Indications for Use (FDA Form 3881)",      "21 CFR 807.87(b)"),
-        ("510(k) Summary or Statement",              "21 CFR 807.92/807.93"),
-        ("Truthful and Accuracy Statement",          "21 CFR 807.87(k)"),
-        ("Class III Summary and Certification",      "21 CFR 807.87(l)"),
-        ("Device Description",                       "21 CFR 807.87(c)"),
-        ("Substantial Equivalence Discussion",       "21 CFR 807.87(f)"),
-        ("Performance Standards",                    "21 CFR 807.87(j)"),
-        ("Software Documentation (Level of Concern)","FDA Guidance 2019"),
-        ("AI/ML Algorithm Description",              "FDA AI/ML Action Plan 2021"),
-        ("Cybersecurity Documentation + SBOM",       "FD&C §524B; FDA Cyber 2023"),
-        ("Biocompatibility (if applicable)",         "ISO 10993"),
-        ("Labeling",                                 "21 CFR 801"),
-        ("Human Factors / Usability Testing",        "IEC 62366-1; FDA HF Guidance"),
-        ("Clinical/Performance Data",                "FDA SaMD Guidance §V"),
+        ("Cover Sheet (FDA Form 3514)", "21 CFR 807.87(a)"),
+        ("Table of Contents", "21 CFR 807.87"),
+        ("Indications for Use (FDA Form 3881)", "21 CFR 807.87(b)"),
+        ("510(k) Summary or Statement", "21 CFR 807.92/807.93"),
+        ("Truthful and Accuracy Statement", "21 CFR 807.87(k)"),
+        ("Class III Summary and Certification", "21 CFR 807.87(l)"),
+        ("Device Description", "21 CFR 807.87(c)"),
+        ("Substantial Equivalence Discussion", "21 CFR 807.87(f)"),
+        ("Performance Standards", "21 CFR 807.87(j)"),
+        ("Software Documentation (Level of Concern)", "FDA Guidance 2019"),
+        ("AI/ML Algorithm Description", "FDA AI/ML Action Plan 2021"),
+        ("Cybersecurity Documentation + SBOM", "FD&C §524B; FDA Cyber 2023"),
+        ("Biocompatibility (if applicable)", "ISO 10993"),
+        ("Labeling", "21 CFR 801"),
+        ("Human Factors / Usability Testing", "IEC 62366-1; FDA HF Guidance"),
+        ("Clinical/Performance Data", "FDA SaMD Guidance §V"),
     ]
     for section, ref in k510_sections:
         print(f"  ☐ {section:<50} [{ref}]")
 
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("  Class II 510(k) validation framework generated successfully.")
-    print("="*70 + "\n")
+    print("=" * 70 + "\n")
 
 
 if __name__ == "__main__":

@@ -22,22 +22,32 @@ IMDRF: Category I (inform / non-serious)
 
 import sys
 import os
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from samd_toolkit.core import SaMDDevice, DeviceClass, SoftwareSafetyClass, RegulatoryPathway
+from samd_toolkit.core import (
+    SaMDDevice,
+    DeviceClass,
+    SoftwareSafetyClass,
+    RegulatoryPathway,
+)
 from samd_toolkit.validators.iq_oq_pq import IQOQPQGenerator
 from samd_toolkit.standards.iso14971 import RiskManagementFile
 from samd_toolkit.standards.iec62304 import IEC62304LifecycleValidator
-from samd_toolkit.standards.imdrf import IMDRFCategorizer, HealthcareState, SignificanceOfOutput
+from samd_toolkit.standards.imdrf import (
+    IMDRFCategorizer,
+    HealthcareState,
+    SignificanceOfOutput,
+)
 from samd_toolkit.cybersecurity.sbom import SBOMGenerator
 
 
 def run_class_i_example():
-    print("\n" + "█"*70)
+    print("\n" + "█" * 70)
     print("  CLASS I SaMD VALIDATION EXAMPLE")
     print("  General Wellness Activity Tracking App (WellTrack)")
     print("  Regulatory: Exempt | IEC 62304 Class A | IMDRF Category I")
-    print("█"*70)
+    print("█" * 70)
 
     device = SaMDDevice(
         name="WellTrack Activity Monitor",
@@ -58,7 +68,7 @@ def run_class_i_example():
         interfaces=["REST API", "Apple HealthKit", "Google Fit"],
         network_connected=True,
         contains_ai_ml=False,
-        processes_phi=False,       # General wellness data, not clinical PHI
+        processes_phi=False,  # General wellness data, not clinical PHI
         interoperates_with_ehr=False,
     )
 
@@ -147,9 +157,9 @@ def run_class_i_example():
     print("       FDA may exercise enforcement discretion")
     print("    → Still good practice to maintain validation documentation")
 
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("  Class I validation framework generated successfully.")
-    print("="*70 + "\n")
+    print("=" * 70 + "\n")
 
 
 if __name__ == "__main__":

@@ -23,23 +23,33 @@ Key risks for AID systems:
 
 import sys
 import os
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from samd_toolkit.core import SaMDDevice, DeviceClass, SoftwareSafetyClass, RegulatoryPathway
+from samd_toolkit.core import (
+    SaMDDevice,
+    DeviceClass,
+    SoftwareSafetyClass,
+    RegulatoryPathway,
+)
 from samd_toolkit.validators.iq_oq_pq import IQOQPQGenerator
 from samd_toolkit.standards.iso14971 import RiskManagementFile, RiskItem
 from samd_toolkit.standards.iec62304 import IEC62304LifecycleValidator
-from samd_toolkit.standards.imdrf import IMDRFCategorizer, HealthcareState, SignificanceOfOutput
+from samd_toolkit.standards.imdrf import (
+    IMDRFCategorizer,
+    HealthcareState,
+    SignificanceOfOutput,
+)
 from samd_toolkit.cybersecurity.fda_cyber import FDACybersecurityChecker
 from samd_toolkit.cybersecurity.sbom import SBOMGenerator
 
 
 def run_class_iii_example():
-    print("\n" + "█"*70)
+    print("\n" + "█" * 70)
     print("  CLASS III SaMD VALIDATION EXAMPLE")
     print("  Closed-Loop Automated Insulin Delivery (AID) System")
     print("  Regulatory Pathway: PMA | IEC 62304 Class C | IMDRF Category IV")
-    print("█"*70)
+    print("█" * 70)
 
     # ---------------------------------------------------------------
     # 1. Define the Device
@@ -68,7 +78,12 @@ def run_class_iii_example():
         programming_language="C++ (embedded) / Python (cloud analytics)",
         operating_system="FreeRTOS (embedded) / Linux (cloud)",
         deployment_environment="Embedded + Cloud Hybrid",
-        interfaces=["Bluetooth LE", "REST API", "CGM Data Stream", "Insulin Pump Protocol"],
+        interfaces=[
+            "Bluetooth LE",
+            "REST API",
+            "CGM Data Stream",
+            "Insulin Pump Protocol",
+        ],
         network_connected=True,
         contains_ai_ml=True,
         processes_phi=True,
@@ -93,7 +108,9 @@ def run_class_iii_example():
     )
     print(imdrf_result)
     print(f"  Description: {imdrf_result.description[:120]}...")
-    print(f"  Clinical Validation Required:   {'YES — PMA-level evidence required' if imdrf_result.clinical_validation_required else 'No'}")
+    print(
+        f"  Clinical Validation Required:   {'YES — PMA-level evidence required' if imdrf_result.clinical_validation_required else 'No'}"
+    )
 
     # ---------------------------------------------------------------
     # 3. IEC 62304 Lifecycle Checklist
@@ -116,40 +133,46 @@ def run_class_iii_example():
     rmf = RiskManagementFile(device)
 
     # Add AID-specific risks beyond the defaults
-    rmf.add_risk(RiskItem(
-        hazard="Insulin stack / overdose due to connectivity loss during delivery",
-        hazardous_situation="Pump continues delivering insulin after BLE disconnect without cancel command",
-        harm="Severe hypoglycemia, seizure, loss of consciousness, death",
-        probability_before=2, severity=5,
-        risk_controls=[
-            "Pump firmware: autonomous cancel delivery after 30-second connectivity loss",
-            "Hard-wired maximum total daily dose limit in pump hardware",
-            "CGM-triggered local hypoglycemia suspend on pump (independent of controller)"
-        ],
-        control_type="Inherent Safety",
-        probability_after=1,
-        residual_risk_justification=(
-            "Multiple independent layers: pump autonomy, hardware limits, CGM suspend. "
-            "Residual risk ALARP; benefit of glycemic control outweighs residual risk."
-        ),
-        verification_method="Fault injection: simulate BLE loss during delivery; verify pump suspend",
-    ))
+    rmf.add_risk(
+        RiskItem(
+            hazard="Insulin stack / overdose due to connectivity loss during delivery",
+            hazardous_situation="Pump continues delivering insulin after BLE disconnect without cancel command",
+            harm="Severe hypoglycemia, seizure, loss of consciousness, death",
+            probability_before=2,
+            severity=5,
+            risk_controls=[
+                "Pump firmware: autonomous cancel delivery after 30-second connectivity loss",
+                "Hard-wired maximum total daily dose limit in pump hardware",
+                "CGM-triggered local hypoglycemia suspend on pump (independent of controller)",
+            ],
+            control_type="Inherent Safety",
+            probability_after=1,
+            residual_risk_justification=(
+                "Multiple independent layers: pump autonomy, hardware limits, CGM suspend. "
+                "Residual risk ALARP; benefit of glycemic control outweighs residual risk."
+            ),
+            verification_method="Fault injection: simulate BLE loss during delivery; verify pump suspend",
+        )
+    )
 
-    rmf.add_risk(RiskItem(
-        hazard="CGM sensor drift leading to incorrect insulin dose calculation",
-        hazardous_situation="Algorithm receives incorrect high glucose reading, commands excess insulin",
-        harm="Severe hypoglycemia",
-        probability_before=3, severity=5,
-        risk_controls=[
-            "CGM signal plausibility check: rate-of-change limits (>4 mg/dL/min → suspend and alert)",
-            "Require calibration confirmation if CGM delta exceeds physiological plausibility",
-            "Maximum single-command dose hard limit regardless of glucose reading"
-        ],
-        control_type="Inherent Safety + Protective Measure",
-        probability_after=1,
-        residual_risk_justification="Plausibility checking catches sensor drift; hardware limits backstop algorithm",
-        verification_method="CGM fault injection testing; sensitivity analysis in clinical validation",
-    ))
+    rmf.add_risk(
+        RiskItem(
+            hazard="CGM sensor drift leading to incorrect insulin dose calculation",
+            hazardous_situation="Algorithm receives incorrect high glucose reading, commands excess insulin",
+            harm="Severe hypoglycemia",
+            probability_before=3,
+            severity=5,
+            risk_controls=[
+                "CGM signal plausibility check: rate-of-change limits (>4 mg/dL/min → suspend and alert)",
+                "Require calibration confirmation if CGM delta exceeds physiological plausibility",
+                "Maximum single-command dose hard limit regardless of glucose reading",
+            ],
+            control_type="Inherent Safety + Protective Measure",
+            probability_after=1,
+            residual_risk_justification="Plausibility checking catches sensor drift; hardware limits backstop algorithm",
+            verification_method="CGM fault injection testing; sensitivity analysis in clinical validation",
+        )
+    )
 
     rmf.print_summary()
 
@@ -204,26 +227,26 @@ def run_class_iii_example():
     print("\n[7] PMA PREMARKET APPROVAL PACKAGE CHECKLIST")
     print("-" * 50)
     pma_sections = [
-        ("Cover Sheet & Table of Contents",           "21 CFR 814.20(a)"),
-        ("Indications for Use Statement",              "21 CFR 814.20(b)(3)"),
-        ("Device Description (hardware + software)",  "21 CFR 814.20(b)(4)"),
-        ("Substantial Equivalence (if De Novo)",      "N/A — PMA pathway"),
-        ("Software Documentation Package",             "FDA SaMD Guidance; IEC 62304"),
-        ("Risk Management File (ISO 14971)",           "ISO 14971:2019"),
+        ("Cover Sheet & Table of Contents", "21 CFR 814.20(a)"),
+        ("Indications for Use Statement", "21 CFR 814.20(b)(3)"),
+        ("Device Description (hardware + software)", "21 CFR 814.20(b)(4)"),
+        ("Substantial Equivalence (if De Novo)", "N/A — PMA pathway"),
+        ("Software Documentation Package", "FDA SaMD Guidance; IEC 62304"),
+        ("Risk Management File (ISO 14971)", "ISO 14971:2019"),
         ("Cybersecurity Documentation (SBOM + CVD)", "FD&C §524B; FDA Cyber 2023"),
-        ("Bench/Analytical Performance Testing",      "FDA SaMD Guidance §V.A"),
-        ("Clinical Study Data (IDE Study)",            "21 CFR 812; FDA SaMD §V.B"),
-        ("Labeling (IFU + Cybersecurity Label)",      "21 CFR 801; FDA Cyber 2023 §VII"),
-        ("Manufacturing Information",                  "21 CFR 814.20(b)(10)"),
-        ("Post-Approval Study Plan",                   "21 CFR 814.82"),
+        ("Bench/Analytical Performance Testing", "FDA SaMD Guidance §V.A"),
+        ("Clinical Study Data (IDE Study)", "21 CFR 812; FDA SaMD §V.B"),
+        ("Labeling (IFU + Cybersecurity Label)", "21 CFR 801; FDA Cyber 2023 §VII"),
+        ("Manufacturing Information", "21 CFR 814.20(b)(10)"),
+        ("Post-Approval Study Plan", "21 CFR 814.82"),
     ]
     for section, ref in pma_sections:
         print(f"  ☐ {section:<50} [{ref}]")
 
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("  Class III validation framework generated successfully.")
     print("  This package supports a PMA submission under 21 CFR Part 814.")
-    print("="*70 + "\n")
+    print("=" * 70 + "\n")
 
 
 if __name__ == "__main__":
