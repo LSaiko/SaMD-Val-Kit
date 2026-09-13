@@ -9,12 +9,7 @@ setup(
     author="SaMD Toolkit Contributors",
     python_requires=">=3.9",
     packages=find_packages(),
-    install_requires=[
-        "reportlab>=4.0.0",
-        "jinja2>=3.1.0",
-        "click>=8.1.0",
-        "rich>=13.0.0",
-    ],
+    install_requires=[],
     extras_require={
         "dev": ["pytest>=7.0", "black", "mypy", "flake8"],
     },
