@@ -4,6 +4,7 @@
 > Covering FDA 21 CFR Part 11/820, IEC 62304, IEC 62443, ISO 14971, IMDRF, EU MDR 2017/745
 
 [![CI](https://github.com/LSaiko/SaMD-Val-Kit/actions/workflows/ci.yml/badge.svg)](https://github.com/LSaiko/SaMD-Val-Kit/actions/workflows/ci.yml)
+[![Dependencies: none](https://img.shields.io/badge/dependencies-none-brightgreen.svg)](setup.py)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![FDA 21 CFR 820](https://img.shields.io/badge/FDA-21%20CFR%20820-red.svg)]()
