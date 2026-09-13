@@ -13,7 +13,7 @@ Covers:
 from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Protocol, runtime_checkable
 from datetime import datetime, timezone
 import uuid
 
@@ -21,6 +21,21 @@ import uuid
 def _utcnow() -> datetime:
     """Return current UTC time. Centralised so all timestamps share the same tz-aware source."""
     return datetime.now(timezone.utc)
+
+
+@runtime_checkable
+class BlockingStatus(Protocol):
+    """
+    Structural contract shared by every status/outcome enum in the toolkit
+    (ValidationStatus, CyberControlStatus, RiskAcceptability, ...).
+
+    Each domain keeps its own vocabulary — auditors expect the exact terms
+    (e.g. ISO 14971's "ALARP") rather than a genericized pass/fail — but every
+    one of them can answer the same question: does this alone block sign-off?
+    """
+
+    @property
+    def is_blocking(self) -> bool: ...
 
 
 # ---------------------------------------------------------------------------
@@ -85,13 +100,10 @@ class ValidationStatus(Enum):
     WAIVED = "Waived"
     N_A = "N/A"
 
-
-class RiskLevel(Enum):
-    """ISO 14971 risk acceptability levels."""
-
-    ACCEPTABLE = "Acceptable"
-    ALARP = "ALARP"  # As Low As Reasonably Practicable
-    UNACCEPTABLE = "Unacceptable"
+    @property
+    def is_blocking(self) -> bool:
+        """Whether this status alone should block release/sign-off."""
+        return self is ValidationStatus.FAILED
 
 
 # ---------------------------------------------------------------------------

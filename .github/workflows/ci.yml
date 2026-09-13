@@ -36,7 +36,7 @@ jobs:
       run: |
         pip install black flake8
         black --check samd_toolkit/ tests/ examples/
-        flake8 samd_toolkit/ --max-line-length=120 --ignore=E501
+        flake8 samd_toolkit/ --max-line-length=120 --ignore=E501,E704
 
     - name: Type checking
       run: |

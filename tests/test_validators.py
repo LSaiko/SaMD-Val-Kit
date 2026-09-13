@@ -21,6 +21,7 @@ from samd_toolkit.core import (
     ValidationItem,
     ValidationStatus,
     RegulatoryPathway,
+    BlockingStatus,
 )
 from samd_toolkit.validators.iq_oq_pq import (
     IQOQPQGenerator,
@@ -40,7 +41,10 @@ from samd_toolkit.standards.imdrf import (
     SignificanceOfOutput,
 )
 from samd_toolkit.standards.iec62304 import IEC62304LifecycleValidator
-from samd_toolkit.cybersecurity.fda_cyber import FDACybersecurityChecker
+from samd_toolkit.cybersecurity.fda_cyber import (
+    FDACybersecurityChecker,
+    CyberControlStatus,
+)
 from samd_toolkit.cybersecurity.sbom import SBOMGenerator
 
 # ---------------------------------------------------------------------------
@@ -448,6 +452,38 @@ class TestRiskMatrixBoundaries:
         risk = RiskItem(probability_before=2, severity=3, probability_after=0)
         with pytest.raises(ValueError, match="Invalid risk matrix key"):
             _ = risk.residual_acceptability
+
+
+# ---------------------------------------------------------------------------
+# Shared BlockingStatus Interface Tests
+# ---------------------------------------------------------------------------
+
+
+class TestBlockingStatus:
+    """
+    ValidationStatus, CyberControlStatus, and RiskAcceptability are separate
+    enums with their own domain vocabulary (regulators expect exact terms
+    like "ALARP"), but each satisfies BlockingStatus so callers can ask a
+    uniform "does this block sign-off?" question without a generic enum.
+    """
+
+    def test_each_status_enum_satisfies_the_protocol(self):
+        assert isinstance(ValidationStatus.FAILED, BlockingStatus)
+        assert isinstance(CyberControlStatus.NON_COMPLIANT, BlockingStatus)
+        assert isinstance(RiskAcceptability.UNACCEPTABLE, BlockingStatus)
+
+    def test_only_the_failing_outcome_is_blocking(self):
+        assert ValidationStatus.FAILED.is_blocking
+        assert not ValidationStatus.PASSED.is_blocking
+        assert not ValidationStatus.WAIVED.is_blocking
+
+        assert CyberControlStatus.NON_COMPLIANT.is_blocking
+        assert not CyberControlStatus.PARTIAL.is_blocking
+        assert not CyberControlStatus.COMPLIANT.is_blocking
+
+        assert RiskAcceptability.UNACCEPTABLE.is_blocking
+        assert not RiskAcceptability.ALARP.is_blocking
+        assert not RiskAcceptability.ACCEPTABLE.is_blocking
 
 
 # ---------------------------------------------------------------------------

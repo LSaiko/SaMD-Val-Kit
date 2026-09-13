@@ -52,6 +52,11 @@ class RiskAcceptability(Enum):
     ALARP = "ALARP"  # Reduce as low as reasonably practicable
     UNACCEPTABLE = "Unacceptable"  # Must reduce before release
 
+    @property
+    def is_blocking(self) -> bool:
+        """Whether this status alone should block release/sign-off."""
+        return self is RiskAcceptability.UNACCEPTABLE
+
 
 # ---------------------------------------------------------------------------
 # Risk Acceptability Matrix (5×5)

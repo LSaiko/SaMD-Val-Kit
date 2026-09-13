@@ -38,6 +38,11 @@ class CyberControlStatus(Enum):
     NOT_ASSESSED = "Not Assessed"
     NOT_APPLICABLE = "N/A"
 
+    @property
+    def is_blocking(self) -> bool:
+        """Whether this status alone should block release/sign-off."""
+        return self is CyberControlStatus.NON_COMPLIANT
+
 
 class CyberSeverity(Enum):
     """CVSS v3.1 severity categories."""
