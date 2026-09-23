@@ -30,7 +30,7 @@ jobs:
 
     - name: Run test suite with coverage
       run: |
-        pytest tests/ -v --tb=short --cov=samd_toolkit --cov-report=term-missing --cov-fail-under=70
+        pytest tests/ -v --tb=short --cov=samd_toolkit --cov-report=term-missing --cov-fail-under=80
 
     - name: Check code style
       run: |

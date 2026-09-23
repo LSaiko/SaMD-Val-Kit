@@ -4,7 +4,8 @@
 > Covering FDA 21 CFR Part 11/820, IEC 62304, IEC 62443, ISO 14971, IMDRF, EU MDR 2017/745
 
 [![CI](https://github.com/LSaiko/SaMD-Val-Kit/actions/workflows/ci.yml/badge.svg)](https://github.com/LSaiko/SaMD-Val-Kit/actions/workflows/ci.yml)
-[![Dependencies: none](https://img.shields.io/badge/dependencies-none-brightgreen.svg)](setup.py)
+[![Coverage ≥80%](https://img.shields.io/badge/coverage-%E2%89%A580%25-brightgreen.svg)](.github/workflows/ci.yml)
+[![Dependencies: none (core)](https://img.shields.io/badge/dependencies-none%20(core)-brightgreen.svg)](setup.py)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![FDA 21 CFR 820](https://img.shields.io/badge/FDA-21%20CFR%20820-red.svg)]()
@@ -229,6 +230,51 @@ rmf.add_risk(RiskItem(
 ))
 rmf.generate_report("./output/risk_management_file.pdf")
 ```
+
+---
+
+## 🧾 Evidence Export
+
+`export_evidence()` writes an executed IQ/OQ/PQ session as machine-readable JSON for
+[traceability-matrix-dhf](https://github.com/LSaiko/traceability-matrix-dhf), the DHF
+traceability tool (21 CFR 820.30, IEC 62304 §5.1.1/§5.7). The export is additive: it only
+reads the session and Risk Management File, and existing IQ/OQ/PQ, HTML and SPDX output
+is unchanged.
+
+```bash
+pip install -e ".[evidence]"   # pydantic v2; the core toolkit stays dependency-free
+```
+
+```python
+from pathlib import Path
+from samd_toolkit.evidence import export_evidence
+
+evidence = export_evidence(
+    session,                      # ValidationSession from IQOQPQGenerator
+    rmf=rmf,                      # optional ISO 14971 RiskManagementFile
+    requirement_ids=["SRS-12"],   # DHF requirements this protocol verifies
+    path=Path("./output/evidence.json"),
+)
+```
+
+The contract is [`samd_toolkit/protocol-evidence.schema.json`](samd_toolkit/protocol-evidence.schema.json)
+(JSON Schema 2020-12, `schema_version: "1.0"`, `source: "samd-val-kit"`). It shares the
+envelope (`generated_at`, `evidence_id`, `requirement_ids`) and the `iec_62304` / `iso_14971`
+block shapes with ml-samd-validator's `ValidationEvidence`, but it is a **sibling schema, not
+a `ValidationEvidence` payload**:
+
+| Carried | Not carried |
+|---|---|
+| Device identity, FDA class, pathway, IMDRF category | Model drift, fairness, performance baseline (not produced by this toolkit) |
+| IEC 62304 software safety class + §4.3 rationale | IEC 62304 lifecycle gap analysis |
+| ISO 14971 hazards, risk controls, residual-risk statement | Per-risk P×S scores (see `RiskItem.to_dict()`) |
+| Per-item IQ/OQ/PQ status, tester, date, evidence ref, deviation | SBOM / cybersecurity controls |
+
+traceability-matrix-dhf does not ingest this schema yet. Its current ingest path
+(`ValidationEvidenceRecord.from_validation_evidence`) accepts only ml-samd-validator exports,
+so a `samd-val-kit` source adapter is required on the consumer side. Exported item statuses
+reflect what was recorded in the session: a `Not Started` item is a template, not objective
+evidence.
 
 ---
 
