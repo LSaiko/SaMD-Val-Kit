@@ -9,9 +9,11 @@ setup(
     author="SaMD Toolkit Contributors",
     python_requires=">=3.9",
     packages=find_packages(),
+    package_data={"samd_toolkit": ["protocol-evidence.schema.json"]},
     install_requires=[],
     extras_require={
-        "dev": ["pytest>=7.0", "black", "mypy", "flake8"],
+        "evidence": ["pydantic>=2,<3"],
+        "dev": ["pytest>=7.0", "black", "mypy", "flake8", "pydantic>=2,<3", "jsonschema"],
     },
     entry_points={
         "console_scripts": [

@@ -1,0 +1,293 @@
+{
+  "$defs": {
+    "DeviceIdentity": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "version": {
+          "title": "Version",
+          "type": "string"
+        },
+        "manufacturer": {
+          "title": "Manufacturer",
+          "type": "string"
+        },
+        "fda_class": {
+          "enum": [
+            "I",
+            "II",
+            "III"
+          ],
+          "title": "Fda Class",
+          "type": "string"
+        },
+        "regulatory_pathway": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Regulatory Pathway"
+        },
+        "imdrf_category": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Imdrf Category"
+        }
+      },
+      "required": [
+        "name",
+        "version",
+        "manufacturer",
+        "fda_class"
+      ],
+      "title": "DeviceIdentity",
+      "type": "object"
+    },
+    "Iec62304Classification": {
+      "additionalProperties": false,
+      "properties": {
+        "safety_class": {
+          "enum": [
+            "A",
+            "B",
+            "C"
+          ],
+          "title": "Safety Class",
+          "type": "string"
+        },
+        "rationale": {
+          "title": "Rationale",
+          "type": "string"
+        }
+      },
+      "required": [
+        "safety_class",
+        "rationale"
+      ],
+      "title": "Iec62304Classification",
+      "type": "object"
+    },
+    "Iso14971Summary": {
+      "additionalProperties": false,
+      "properties": {
+        "hazards": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Hazards",
+          "type": "array"
+        },
+        "risk_controls": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Risk Controls",
+          "type": "array"
+        },
+        "residual_risk_statement": {
+          "title": "Residual Risk Statement",
+          "type": "string"
+        }
+      },
+      "required": [
+        "hazards",
+        "risk_controls",
+        "residual_risk_statement"
+      ],
+      "title": "Iso14971Summary",
+      "type": "object"
+    },
+    "ProtocolExecution": {
+      "additionalProperties": false,
+      "properties": {
+        "protocol_type": {
+          "title": "Protocol Type",
+          "type": "string"
+        },
+        "session_id": {
+          "title": "Session Id",
+          "type": "string"
+        },
+        "total": {
+          "title": "Total",
+          "type": "integer"
+        },
+        "passed": {
+          "title": "Passed",
+          "type": "integer"
+        },
+        "failed": {
+          "title": "Failed",
+          "type": "integer"
+        },
+        "pending": {
+          "title": "Pending",
+          "type": "integer"
+        },
+        "items": {
+          "items": {
+            "$ref": "#/$defs/ProtocolItemResult"
+          },
+          "title": "Items",
+          "type": "array"
+        }
+      },
+      "required": [
+        "protocol_type",
+        "session_id",
+        "total",
+        "passed",
+        "failed",
+        "pending",
+        "items"
+      ],
+      "title": "ProtocolExecution",
+      "type": "object"
+    },
+    "ProtocolItemResult": {
+      "additionalProperties": false,
+      "properties": {
+        "item_id": {
+          "title": "Item Id",
+          "type": "string"
+        },
+        "section": {
+          "title": "Section",
+          "type": "string"
+        },
+        "requirement": {
+          "title": "Requirement",
+          "type": "string"
+        },
+        "reference_standard": {
+          "title": "Reference Standard",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "Not Started",
+            "In Progress",
+            "Passed",
+            "Failed",
+            "Waived",
+            "N/A"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "tester": {
+          "default": "",
+          "title": "Tester",
+          "type": "string"
+        },
+        "test_date": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Test Date"
+        },
+        "evidence_ref": {
+          "default": "",
+          "title": "Evidence Ref",
+          "type": "string"
+        },
+        "deviation_note": {
+          "default": "",
+          "title": "Deviation Note",
+          "type": "string"
+        }
+      },
+      "required": [
+        "item_id",
+        "section",
+        "requirement",
+        "reference_standard",
+        "status"
+      ],
+      "title": "ProtocolItemResult",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Stable JSON export of an IQ/OQ/PQ session for traceability-matrix-dhf.",
+  "properties": {
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "source": {
+      "const": "samd-val-kit",
+      "default": "samd-val-kit",
+      "title": "Source",
+      "type": "string"
+    },
+    "generated_at": {
+      "format": "date-time",
+      "title": "Generated At",
+      "type": "string"
+    },
+    "evidence_id": {
+      "title": "Evidence Id",
+      "type": "string"
+    },
+    "requirement_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Requirement Ids",
+      "type": "array"
+    },
+    "device": {
+      "$ref": "#/$defs/DeviceIdentity"
+    },
+    "iec_62304": {
+      "$ref": "#/$defs/Iec62304Classification"
+    },
+    "iso_14971": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Iso14971Summary"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "protocol": {
+      "$ref": "#/$defs/ProtocolExecution"
+    }
+  },
+  "required": [
+    "generated_at",
+    "device",
+    "iec_62304",
+    "protocol"
+  ],
+  "title": "ProtocolEvidence",
+  "type": "object"
+}
